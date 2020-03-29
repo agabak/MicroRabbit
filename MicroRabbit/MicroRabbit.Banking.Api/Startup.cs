@@ -14,6 +14,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.OpenApi.Models;
 
 namespace MicroRabbit.Banking.Api
 {
@@ -32,6 +33,11 @@ namespace MicroRabbit.Banking.Api
             services.AddDbContext<BankingDbContext>(opt => opt.UseSqlServer(Configuration.GetConnectionString("BankingDbConnection")));
             services.AddControllers();
 
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo { Title ="Banking Microservices", Version ="v1" });
+            });
+
             services.AddMediatR(typeof(Startup));  //  config  MediatR
             RegisterServices(services);
         }
@@ -49,6 +55,12 @@ namespace MicroRabbit.Banking.Api
             app.UseRouting();
 
             app.UseAuthorization();
+
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Banking Microservice v1");
+            });
 
             app.UseEndpoints(endpoints =>
             {
