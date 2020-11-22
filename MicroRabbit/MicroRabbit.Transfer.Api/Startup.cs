@@ -1,6 +1,13 @@
 using MediatR;
+using MicroRabbit.Domain.Core.Bus;
 using MicroRabbit.Infra.IoC;
+using MicroRabbit.Transfer.Application.Interfaces;
+using MicroRabbit.Transfer.Application.Services;
 using MicroRabbit.Transfer.Data.Contexts;
+using MicroRabbit.Transfer.Data.Repositories;
+using MicroRabbit.Transfer.Domain.EventHndlers;
+using MicroRabbit.Transfer.Domain.Events;
+using MicroRabbit.Transfer.Domain.Interfaces;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -8,6 +15,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using System;
 
 namespace MicroRabbit.Transfer.Api
 {
@@ -31,8 +39,15 @@ namespace MicroRabbit.Transfer.Api
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Transfer Microservices", Version = "v1" });
             });
 
+            //Transfer
+            services.AddTransient<IEventHandler<TransferCreatedEvent>, TransferEventHandler>();
+            services.AddTransient<TransferEventHandler>();
+            services.AddTransient<ITransferService, TransferService>();
+            services.AddTransient<ITransferRepository, TransferRepository>();
+            services.AddTransient<TransferDbContext>();
+
             services.AddMediatR(typeof(Startup));  //  config  MediatR
-            RegisterServices(services);
+             RegisterServices(services);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -59,6 +74,14 @@ namespace MicroRabbit.Transfer.Api
             {
                 endpoints.MapControllers();
             });
+
+            ConfigureEventBus(app);
+        }
+
+        private static void ConfigureEventBus(IApplicationBuilder app)
+        {
+            var eventBus = app.ApplicationServices.GetRequiredService<IEventBus>();
+            eventBus.Subcribe<TransferCreatedEvent, TransferEventHandler>();
         }
 
         private static void RegisterServices(IServiceCollection services)

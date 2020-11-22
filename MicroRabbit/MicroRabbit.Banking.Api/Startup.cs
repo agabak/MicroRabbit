@@ -1,5 +1,9 @@
 using MediatR;
+using MicroRabbit.Banking.Application.Interfaces;
+using MicroRabbit.Banking.Application.Services;
 using MicroRabbit.Banking.Data.Contexts;
+using MicroRabbit.Banking.Data.Repositories;
+using MicroRabbit.Banking.Domain.Interfaces;
 using MicroRabbit.Infra.IoC;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -30,6 +34,11 @@ namespace MicroRabbit.Banking.Api
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title ="Banking Microservices", Version ="v1" });
             });
+
+            //Banking
+            services.AddTransient<IAccountService, AccountService>();
+            services.AddTransient<IAccountRepository, AccountRepository>();
+            services.AddTransient<BankingDbContext>();
 
             services.AddMediatR(typeof(Startup));  //  config  MediatR
             RegisterServices(services);
